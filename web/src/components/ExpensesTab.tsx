@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface Transaction {
+interface Expense {
   id: number;
   description: string;
   date: string;
@@ -53,12 +53,12 @@ interface Category {
 const API = "http://localhost:3000";
 const PAYMENT_METHODS = ["Credit Card", "Debit Card", "Pix", "Cash"];
 
-export default function TransactionsTab() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+export default function ExpensesTab() {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters — use "all" instead of "" for Radix Select compatibility
+  // Filters
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -79,18 +79,18 @@ export default function TransactionsTab() {
   const [formError, setFormError] = useState<string | null>(null);
 
   // Delete confirmation
-  const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null);
 
-  const fetchTransactions = async () => {
+  const fetchExpenses = async () => {
     const params = new URLSearchParams();
     if (startDate) params.set("start_date", startDate);
     if (endDate) params.set("end_date", endDate);
     if (filterCategory !== "all") params.set("category_id", filterCategory);
     if (filterType !== "all") params.set("type", filterType);
     const qs = params.toString();
-    const res = await fetch(`${API}/transactions${qs ? `?${qs}` : ""}`);
+    const res = await fetch(`${API}/expenses${qs ? `?${qs}` : ""}`);
     const data = await res.json();
-    setTransactions(data.transactions);
+    setExpenses(data.expenses);
     setLoading(false);
   };
 
@@ -109,21 +109,21 @@ export default function TransactionsTab() {
 
   useEffect(() => {
     let ignore = false;
-    const loadTransactions = async () => {
+    const loadExpenses = async () => {
       const params = new URLSearchParams();
       if (startDate) params.set("start_date", startDate);
       if (endDate) params.set("end_date", endDate);
       if (filterCategory !== "all") params.set("category_id", filterCategory);
       if (filterType !== "all") params.set("type", filterType);
       const qs = params.toString();
-      const res = await fetch(`${API}/transactions${qs ? `?${qs}` : ""}`);
+      const res = await fetch(`${API}/expenses${qs ? `?${qs}` : ""}`);
       const data = await res.json();
       if (!ignore) {
-        setTransactions(data.transactions);
+        setExpenses(data.expenses);
         setLoading(false);
       }
     };
-    loadTransactions();
+    loadExpenses();
     return () => {
       ignore = true;
     };
@@ -151,13 +151,18 @@ export default function TransactionsTab() {
       return;
     }
 
-    const res = await fetch(`${API}/transactions`, {
+    if (Number(formAmount) <= 0) {
+      setFormError("Amount must be greater than zero");
+      return;
+    }
+
+    const res = await fetch(`${API}/expenses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         description: formDesc.trim(),
         date: formDate,
-        amount: Number(formAmount),
+        amount: -Math.abs(Number(formAmount)),
         payment_method: formPayment.trim(),
         category_id: Number(formCategory),
         type: formType,
@@ -171,7 +176,7 @@ export default function TransactionsTab() {
     }
 
     resetForm();
-    fetchTransactions();
+    fetchExpenses();
   };
 
   const resetForm = () => {
@@ -187,14 +192,14 @@ export default function TransactionsTab() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    const res = await fetch(`${API}/transactions/${deleteTarget.id}`, {
+    const res = await fetch(`${API}/expenses/${deleteTarget.id}`, {
       method: "DELETE",
     });
     if (!res.ok) {
       return;
     }
     setDeleteTarget(null);
-    fetchTransactions();
+    fetchExpenses();
   };
 
   const formatCurrency = (amount: number) => {
@@ -236,9 +241,9 @@ export default function TransactionsTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-foreground">Transactions</h2>
+        <h2 className="text-lg font-semibold text-foreground">Expenses</h2>
         {!showForm && (
-          <Button onClick={() => setShowForm(true)}>+ Add Transaction</Button>
+          <Button onClick={() => setShowForm(true)}>+ Add Expense</Button>
         )}
       </div>
 
@@ -274,8 +279,9 @@ export default function TransactionsTab() {
                   type="number"
                   value={formAmount}
                   onChange={(e) => setFormAmount(e.target.value)}
-                  placeholder="e.g. -25 or 3000"
+                  placeholder="e.g. 25.00"
                   step="0.01"
+                  min="0.01"
                 />
               </div>
               <div className="space-y-1.5">
@@ -411,10 +417,10 @@ export default function TransactionsTab() {
         </CardContent>
       </Card>
 
-      {/* Transaction table */}
-      {transactions.length === 0 ? (
+      {/* Expense table */}
+      {expenses.length === 0 ? (
         <p className="text-center text-muted-foreground py-12">
-          No transactions yet. Add one to get started.
+          No expenses yet. Add one to get started.
         </p>
       ) : (
         <div className="rounded-md border">
@@ -431,7 +437,7 @@ export default function TransactionsTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.map((tx) => (
+              {expenses.map((tx) => (
                 <TableRow key={tx.id}>
                   <TableCell className="text-foreground">
                     {formatDate(tx.date)}
@@ -439,11 +445,7 @@ export default function TransactionsTab() {
                   <TableCell className="text-foreground">
                     {tx.description}
                   </TableCell>
-                  <TableCell
-                    className={`text-right font-medium ${
-                      tx.amount >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
+                  <TableCell className="text-right font-medium text-foreground">
                     {formatCurrency(tx.amount)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -488,9 +490,9 @@ export default function TransactionsTab() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this transaction?
+              Are you sure you want to delete this expense?
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteTarget && (
@@ -498,11 +500,7 @@ export default function TransactionsTab() {
               <p className="font-medium text-foreground">
                 {deleteTarget.description}
               </p>
-              <p
-                className={
-                  deleteTarget.amount >= 0 ? "text-green-600" : "text-red-600"
-                }
-              >
+              <p className="text-foreground">
                 {formatCurrency(deleteTarget.amount)}
               </p>
             </div>

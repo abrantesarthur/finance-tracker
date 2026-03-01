@@ -1,52 +1,52 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
-import { transactions, budgetCategories } from "../db/schema";
+import { expenses, budgetCategories } from "../db/schema";
 import { eq, desc, gte, lte, and } from "drizzle-orm";
 
-export const transactionsRoutes = new Elysia()
+export const expensesRoutes = new Elysia()
   .onError(({ code, set }) => {
     if (code === "VALIDATION") {
       set.status = 400;
       return { error: "All fields are required" };
     }
   })
-  .get("/transactions", async ({ query }) => {
+  .get("/expenses", async ({ query }) => {
     const conditions = [];
 
     if (query.start_date) {
-      conditions.push(gte(transactions.date, query.start_date));
+      conditions.push(gte(expenses.date, query.start_date));
     }
     if (query.end_date) {
-      conditions.push(lte(transactions.date, query.end_date));
+      conditions.push(lte(expenses.date, query.end_date));
     }
     if (query.category_id) {
-      conditions.push(eq(transactions.categoryId, Number(query.category_id)));
+      conditions.push(eq(expenses.categoryId, Number(query.category_id)));
     }
     if (query.type) {
-      conditions.push(eq(transactions.type, query.type));
+      conditions.push(eq(expenses.type, query.type));
     }
 
     const rows = await db
       .select({
-        id: transactions.id,
-        description: transactions.description,
-        date: transactions.date,
-        amount: transactions.amount,
-        payment_method: transactions.paymentMethod,
-        category_id: transactions.categoryId,
+        id: expenses.id,
+        description: expenses.description,
+        date: expenses.date,
+        amount: expenses.amount,
+        payment_method: expenses.paymentMethod,
+        category_id: expenses.categoryId,
         category_name: budgetCategories.name,
-        type: transactions.type,
-        created_at: transactions.createdAt,
+        type: expenses.type,
+        created_at: expenses.createdAt,
       })
-      .from(transactions)
-      .leftJoin(budgetCategories, eq(transactions.categoryId, budgetCategories.id))
+      .from(expenses)
+      .leftJoin(budgetCategories, eq(expenses.categoryId, budgetCategories.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(transactions.date), desc(transactions.createdAt));
+      .orderBy(desc(expenses.date), desc(expenses.createdAt));
 
-    return { transactions: rows };
+    return { expenses: rows };
   })
   .post(
-    "/transactions",
+    "/expenses",
     async ({ body, set }) => {
       const { description, date, amount, payment_method, category_id, type } = body;
 
@@ -72,7 +72,7 @@ export const transactionsRoutes = new Elysia()
       }
 
       const [created] = await db
-        .insert(transactions)
+        .insert(expenses)
         .values({
           description,
           date,
@@ -97,16 +97,16 @@ export const transactionsRoutes = new Elysia()
       }),
     }
   )
-  .delete("/transactions/:id", async ({ params, set }) => {
+  .delete("/expenses/:id", async ({ params, set }) => {
     const id = Number(params.id);
     const deleted = await db
-      .delete(transactions)
-      .where(eq(transactions.id, id))
+      .delete(expenses)
+      .where(eq(expenses.id, id))
       .returning();
 
     if (deleted.length === 0) {
       set.status = 404;
-      return { error: "Transaction not found" };
+      return { error: "Expense not found" };
     }
 
     return { success: true };

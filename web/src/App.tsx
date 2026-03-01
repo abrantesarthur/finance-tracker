@@ -1,15 +1,19 @@
 import { useState } from "react";
 import CategoriesTab from "./components/CategoriesTab";
-import TransactionsTab from "./components/TransactionsTab";
+import ExpensesTab from "./components/ExpensesTab";
+import IncomeTab from "./components/IncomeTab";
+import DashboardTab from "./components/DashboardTab";
 import { ModeToggle } from "./components/mode-toggle";
 
-type Tab = "transactions" | "categories";
+type Tab = "dashboard" | "expenses" | "income" | "categories";
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>("transactions");
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "transactions", label: "Transactions" },
+    { key: "dashboard", label: "Dashboard" },
+    { key: "expenses", label: "Expenses" },
+    { key: "income", label: "Income" },
     { key: "categories", label: "Categories" },
   ];
 
@@ -43,11 +47,10 @@ function App() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-6 py-8">
-        {activeTab === "transactions" ? (
-          <TransactionsTab />
-        ) : (
-          <CategoriesTab />
-        )}
+        {activeTab === "dashboard" && <DashboardTab />}
+        {activeTab === "expenses" && <ExpensesTab />}
+        {activeTab === "income" && <IncomeTab />}
+        {activeTab === "categories" && <CategoriesTab />}
       </main>
     </div>
   );
