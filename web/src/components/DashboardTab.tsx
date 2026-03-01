@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import CashflowChart, { getStartDateForRange } from "@/components/CashflowChart";
+import SpendingBreakdown from "@/components/SpendingBreakdown";
 import TableToolbar from "@/components/TableToolbar";
 
 export interface MergedRow {
@@ -147,6 +148,11 @@ export default function DashboardTab() {
 
       {/* Cashflow chart */}
       <CashflowChart rows={rows} timeRange={timeRange} />
+
+      <hr className="border-border mb-6" />
+
+      {/* Spending breakdown */}
+      <SpendingBreakdown rows={rows} timeRange={timeRange} />
 
       <hr className="border-border mb-6" />
 
