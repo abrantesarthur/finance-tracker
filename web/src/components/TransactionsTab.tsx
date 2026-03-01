@@ -92,18 +92,39 @@ export default function TransactionsTab() {
     setLoading(false);
   };
 
-  const fetchCategories = async () => {
-    const res = await fetch(`${API}/categories`);
-    const data = await res.json();
-    setCategories(data.categories);
-  };
-
   useEffect(() => {
-    fetchCategories();
+    let ignore = false;
+    const loadCategories = async () => {
+      const res = await fetch(`${API}/categories`);
+      const data = await res.json();
+      if (!ignore) setCategories(data.categories);
+    };
+    loadCategories();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   useEffect(() => {
-    fetchTransactions();
+    let ignore = false;
+    const loadTransactions = async () => {
+      const params = new URLSearchParams();
+      if (startDate) params.set("start_date", startDate);
+      if (endDate) params.set("end_date", endDate);
+      if (filterCategory !== "all") params.set("category_id", filterCategory);
+      if (filterType !== "all") params.set("type", filterType);
+      const qs = params.toString();
+      const res = await fetch(`${API}/transactions${qs ? `?${qs}` : ""}`);
+      const data = await res.json();
+      if (!ignore) {
+        setTransactions(data.transactions);
+        setLoading(false);
+      }
+    };
+    loadTransactions();
+    return () => {
+      ignore = true;
+    };
   }, [startDate, endDate, filterCategory, filterType]);
 
   const clearFilters = () => {
