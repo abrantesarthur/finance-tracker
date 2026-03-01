@@ -36,7 +36,19 @@ export default function CategoriesTab() {
   };
 
   useEffect(() => {
-    fetchCategories();
+    let ignore = false;
+    const loadCategories = async () => {
+      const res = await fetch(`${API}/categories`);
+      const data = await res.json();
+      if (!ignore) {
+        setCategories(data.categories);
+        setLoading(false);
+      }
+    };
+    loadCategories();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handleSave = async () => {
