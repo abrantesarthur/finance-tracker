@@ -44,3 +44,4 @@ The API runs at `http://localhost:3000` and the UI at `http://localhost:5173`.
 - Support a net worth section including my investments.
 - Display runway based on my spend and net worth
 - Pull card transactions automatically from my bank accounts and reconcile them into the sqlite db file.
+- Think of other cool analytics I can run on all this data, especially using AI.
