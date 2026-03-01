@@ -38,7 +38,6 @@ The API runs at `http://localhost:3000` and the UI at `http://localhost:5173`.
 **Transaction filters** (query params on `GET /transactions`): date range, category, type (`subscription` | `discretionary`).
 
 ## Roadmap
-- use https://ui.shadcn.com/ as the design system. Update readme to mention this. How we use it? 
 - Display a cashflow graph with net spend in the last day, week, month, quarter and year. Get inspiration from Robinhood.
 - Figure out how to save the state .db file safely. Add instructions to readme about how to retrieve it.
 - Decide on a design style (colors, fonts, etc). Get inpiration from Robinhood and pinterest pages.
