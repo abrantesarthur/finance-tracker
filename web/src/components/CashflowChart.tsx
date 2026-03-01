@@ -112,7 +112,7 @@ export default function CashflowChart({ rows, timeRange }: CashflowChartProps) {
       <h2 className="text-lg font-semibold text-foreground mb-3">
         Cashflow{data.length > 0 && (
           <span className="text-sm font-medium ml-1">
-            (<span className={`font-mono tabular-nums ${aggregate >= 0 ? "text-green-500" : "text-red-500"}`}>{aggregate >= 0 ? "+" : ""}{formatCurrency(aggregate)}</span>)
+            (<span className={`font-mono tabular-nums ${aggregate >= 0 ? "text-green-400/70" : "text-red-400/70"}`}>{aggregate >= 0 ? "+" : ""}{formatCurrency(aggregate)}</span>)
           </span>
         )}
       </h2>

@@ -180,13 +180,7 @@ export default function DashboardTab() {
                   <TableCell className="text-foreground">
                     {row.description}
                   </TableCell>
-                  <TableCell
-                    className={`text-right font-medium ${
-                      row._source === "income"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
+                  <TableCell className="text-right font-medium text-foreground">
                     {formatCurrency(row.amount)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -198,13 +192,15 @@ export default function DashboardTab() {
                       : "-"}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        row._source === "income" ? "default" : "secondary"
-                      }
+                    <span
+                      className={`font-medium ${
+                        row._source === "income"
+                          ? "text-green-400/70"
+                          : "text-red-400/70"
+                      }`}
                     >
                       {row._source === "income" ? "Income" : "Expense"}
-                    </Badge>
+                    </span>
                   </TableCell>
                 </TableRow>
               ))}
