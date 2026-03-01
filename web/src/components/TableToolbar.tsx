@@ -60,7 +60,7 @@ export default function TableToolbar({
     <div className="flex items-center justify-end gap-1 px-4 py-2 border-b">
       <Popover>
         <PopoverTrigger asChild>
-          <button className="relative inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+          <button className="relative inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer">
             <HugeiconsIcon icon={FilterIcon} size={16} />
             {hasFilters && (
               <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary" />

@@ -133,7 +133,7 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
             No data for the selected period.
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="h-[300px] w-full aspect-auto">
+          <ChartContainer config={chartConfig} className="h-[300px] w-full aspect-auto cursor-pointer">
             <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
               <defs>
                 <linearGradient id="cashflowGradient" x1="0" y1="0" x2="0" y2="1">
