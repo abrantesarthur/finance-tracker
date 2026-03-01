@@ -20,15 +20,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import CashflowChart from "@/components/CashflowChart";
 
-interface MergedRow {
+export interface MergedRow {
   id: number;
   description: string;
   date: string;
   amount: number;
   payment_method?: string;
   category?: string;
-  type?: string;
   created_at: string;
   _source: "expense" | "income";
 }
@@ -49,7 +49,6 @@ export default function DashboardTab() {
   const [endDate, setEndDate] = useState("");
   const [filterSource, setFilterSource] = useState("all"); // all | expense | income
   const [filterCategory, setFilterCategory] = useState("all");
-  const [filterExpenseType, setFilterExpenseType] = useState("all"); // all | subscription | discretionary
 
   useEffect(() => {
     let ignore = false;
@@ -67,9 +66,6 @@ export default function DashboardTab() {
       }
       if (filterCategory !== "all") {
         expenseParams.set("category", filterCategory);
-      }
-      if (filterExpenseType !== "all") {
-        expenseParams.set("type", filterExpenseType);
       }
 
       const fetchExpenses = filterSource !== "income";
@@ -114,22 +110,20 @@ export default function DashboardTab() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate, filterSource, filterCategory, filterExpenseType]);
+  }, [startDate, endDate, filterSource, filterCategory]);
 
   const clearFilters = () => {
     setStartDate("");
     setEndDate("");
     setFilterSource("all");
     setFilterCategory("all");
-    setFilterExpenseType("all");
   };
 
   const hasFilters =
     startDate ||
     endDate ||
     filterSource !== "all" ||
-    filterCategory !== "all" ||
-    filterExpenseType !== "all";
+    filterCategory !== "all";
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -151,6 +145,7 @@ export default function DashboardTab() {
     return (
       <div className="space-y-4 py-6">
         <Skeleton className="h-6 w-36" />
+        <Skeleton className="h-[350px] w-full rounded-xl" />
         <Skeleton className="h-14 w-full" />
         <div className="rounded-md border">
           <div className="p-4 space-y-3">
@@ -198,7 +193,6 @@ export default function DashboardTab() {
                 setFilterSource(v);
                 if (v === "income") {
                   setFilterCategory("all");
-                  setFilterExpenseType("all");
                 }
               }}>
                 <SelectTrigger>
@@ -212,43 +206,25 @@ export default function DashboardTab() {
               </Select>
             </div>
             {filterSource !== "income" && (
-              <>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Category</Label>
-                  <Select
-                    value={filterCategory}
-                    onValueChange={setFilterCategory}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {CATEGORIES.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Expense Type</Label>
-                  <Select
-                    value={filterExpenseType}
-                    onValueChange={setFilterExpenseType}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="subscription">Subscription</SelectItem>
-                      <SelectItem value="discretionary">Discretionary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Category</Label>
+                <Select
+                  value={filterCategory}
+                  onValueChange={setFilterCategory}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
             {hasFilters && (
               <Button variant="ghost" onClick={clearFilters}>
@@ -258,6 +234,9 @@ export default function DashboardTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cashflow chart */}
+      <CashflowChart rows={rows} />
 
       {/* Merged table */}
       {rows.length === 0 ? (
@@ -275,7 +254,6 @@ export default function DashboardTab() {
                 <TableHead>Category</TableHead>
                 <TableHead>Payment Method</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Expense Type</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -312,19 +290,6 @@ export default function DashboardTab() {
                     >
                       {row._source === "income" ? "Income" : "Expense"}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {row._source === "expense" && row.type ? (
-                      <Badge
-                        variant={
-                          row.type === "subscription" ? "default" : "secondary"
-                        }
-                      >
-                        {row.type}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
                   </TableCell>
                 </TableRow>
               ))}
