@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import TableToolbar from "@/components/TableToolbar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -239,44 +240,21 @@ export default function IncomeTab() {
         </Card>
       )}
 
-      {/* Filter bar */}
-      <Card className="mb-6">
-        <CardContent>
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">From</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-auto"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">To</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-auto"
-              />
-            </div>
-            {hasFilters && (
-              <Button variant="ghost" onClick={clearFilters}>
-                Clear filters
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Income table */}
-      {incomeList.length === 0 ? (
-        <p className="text-center text-muted-foreground py-12">
-          No income yet. Add one to get started.
-        </p>
-      ) : (
-        <div className="rounded-md border">
+      <div className="rounded-md border">
+        <TableToolbar
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          hasFilters={!!hasFilters}
+          onClearFilters={clearFilters}
+        />
+        {incomeList.length === 0 ? (
+          <p className="text-center text-muted-foreground py-12">
+            No income yet. Add one to get started.
+          </p>
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -313,8 +291,8 @@ export default function IncomeTab() {
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Delete confirmation dialog */}
       <AlertDialog

@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import TableToolbar from "@/components/TableToolbar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -303,63 +304,24 @@ export default function ExpensesTab() {
         </Card>
       )}
 
-      {/* Filter bar */}
-      <Card className="mb-6">
-        <CardContent>
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">From</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-auto"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">To</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-auto"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Category</Label>
-              <Select
-                value={filterCategory}
-                onValueChange={setFilterCategory}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {hasFilters && (
-              <Button variant="ghost" onClick={clearFilters}>
-                Clear filters
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Expense table */}
-      {expenses.length === 0 ? (
-        <p className="text-center text-muted-foreground py-12">
-          No expenses yet. Add one to get started.
-        </p>
-      ) : (
-        <div className="rounded-md border">
+      <div className="rounded-md border">
+        <TableToolbar
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          showCategoryFilter
+          filterCategory={filterCategory}
+          onFilterCategoryChange={setFilterCategory}
+          hasFilters={!!hasFilters}
+          onClearFilters={clearFilters}
+        />
+        {expenses.length === 0 ? (
+          <p className="text-center text-muted-foreground py-12">
+            No expenses yet. Add one to get started.
+          </p>
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -404,8 +366,8 @@ export default function ExpensesTab() {
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Delete confirmation dialog */}
       <AlertDialog
