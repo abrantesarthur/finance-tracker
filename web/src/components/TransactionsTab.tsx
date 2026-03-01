@@ -51,6 +51,7 @@ interface Category {
 }
 
 const API = "http://localhost:3000";
+const PAYMENT_METHODS = ["Credit Card", "Debit Card", "Pix", "Cash"];
 
 export default function TransactionsTab() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -278,14 +279,19 @@ export default function TransactionsTab() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="tx-payment">Payment Method</Label>
-                <Input
-                  id="tx-payment"
-                  type="text"
-                  value={formPayment}
-                  onChange={(e) => setFormPayment(e.target.value)}
-                  placeholder="Credit Card, Pix, Cash"
-                />
+                <Label>Payment Method</Label>
+                <Select value={formPayment} onValueChange={setFormPayment}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_METHODS.map((method) => (
+                      <SelectItem key={method} value={method}>
+                        {method}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Category</Label>
