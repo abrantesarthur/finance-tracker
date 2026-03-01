@@ -36,3 +36,5 @@ The API runs at `http://localhost:3000` and the UI at `http://localhost:5173`.
 | `DELETE` | `/transactions/:id`  | Remove a transaction     |
 
 **Transaction filters** (query params on `GET /transactions`): date range, category, type (`subscription` | `discretionary`).
+
+## Roadmap
