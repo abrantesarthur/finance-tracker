@@ -139,7 +139,8 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
 
               <ChartTooltip
                 cursor={{ fill: "var(--muted)", opacity: 0.3 }}
-                position={{ x: 0, y: 4 }}
+                position={{ y: 4 }}
+                isAnimationActive={false}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const point = payload[0].payload as { date: string; net: number };
