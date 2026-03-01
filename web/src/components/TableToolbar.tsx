@@ -49,7 +49,7 @@ export default function TableToolbar({
   return (
     <div className="flex items-center justify-end gap-2">
       <Select value={timeRange} onValueChange={onTimeRangeChange}>
-        <SelectTrigger className="w-[130px] h-8 text-xs">
+        <SelectTrigger className="w-[130px] h-8 text-xs bg-card">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -63,7 +63,7 @@ export default function TableToolbar({
 
       {showTypeFilter && onFilterSourceChange && (
         <Select value={filterSource} onValueChange={onFilterSourceChange}>
-          <SelectTrigger className="w-[100px] h-8 text-xs">
+          <SelectTrigger className="w-[100px] h-8 text-xs bg-card">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -76,7 +76,7 @@ export default function TableToolbar({
 
       {showCategoryFilter && onFilterCategoryChange && (
         <Select value={filterCategory} onValueChange={onFilterCategoryChange}>
-          <SelectTrigger className="w-[140px] h-8 text-xs">
+          <SelectTrigger className="w-[140px] h-8 text-xs bg-card">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>

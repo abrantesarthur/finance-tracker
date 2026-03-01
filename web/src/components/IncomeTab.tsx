@@ -240,7 +240,7 @@ export default function IncomeTab() {
       )}
 
       {/* Income table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         {incomeList.length === 0 ? (
           <p className="text-center text-muted-foreground py-12">
             No income yet. Add one to get started.

@@ -153,7 +153,7 @@ export default function DashboardTab() {
       {/* Transactions */}
       <h2 className="text-lg font-semibold text-foreground mb-3">Transactions</h2>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         {/* Table */}
         {rows.length === 0 ? (
           <p className="text-center text-muted-foreground py-12">
@@ -195,8 +195,8 @@ export default function DashboardTab() {
                     <span
                       className={`font-medium ${
                         row._source === "income"
-                          ? "text-green-400/70"
-                          : "text-red-400/70"
+                          ? "text-green-600/80"
+                          : "text-red-600/80"
                       }`}
                     >
                       {row._source === "income" ? "Income" : "Expense"}

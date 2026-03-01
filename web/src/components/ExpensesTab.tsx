@@ -305,7 +305,7 @@ export default function ExpensesTab() {
       )}
 
       {/* Expense table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-card">
         {expenses.length === 0 ? (
           <p className="text-center text-muted-foreground py-12">
             No expenses yet. Add one to get started.
