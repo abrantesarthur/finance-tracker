@@ -144,7 +144,6 @@ export default function DashboardTab() {
   if (loading) {
     return (
       <div className="space-y-4 py-6">
-        <Skeleton className="h-6 w-36" />
         <Skeleton className="h-[350px] w-full rounded-xl" />
         <Skeleton className="h-14 w-full" />
         <div className="rounded-md border">
@@ -161,9 +160,8 @@ export default function DashboardTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-foreground">Dashboard</h2>
-      </div>
+      {/* Cashflow chart */}
+      <CashflowChart rows={rows} />
 
       {/* Filter bar */}
       <Card className="mb-6">
@@ -234,9 +232,6 @@ export default function DashboardTab() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Cashflow chart */}
-      <CashflowChart rows={rows} />
 
       {/* Merged table */}
       {rows.length === 0 ? (

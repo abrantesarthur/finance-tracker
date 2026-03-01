@@ -182,8 +182,7 @@ export default function IncomeTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-foreground">Income</h2>
+      <div className="flex items-center justify-end mb-6">
         {!showForm && (
           <Button onClick={() => setShowForm(true)}>+ Add Income</Button>
         )}
