@@ -162,7 +162,7 @@ export default function ExpensesTab() {
       body: JSON.stringify({
         description: formDesc.trim(),
         date: formDate,
-        amount: -Math.abs(Number(formAmount)),
+        amount: Number(formAmount),
         payment_method: formPayment.trim(),
         category_id: Number(formCategory),
         type: formType,
