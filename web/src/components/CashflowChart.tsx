@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
+  Cell,
   ReferenceLine,
   XAxis,
   YAxis,
@@ -16,8 +17,8 @@ import {
 import type { MergedRow } from "@/components/DashboardTab";
 
 const chartConfig = {
-  cumulative: {
-    label: "Cashflow",
+  net: {
+    label: "Daily Cashflow",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
@@ -58,29 +59,6 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-/** Fill in missing dates between min and max with 0 net */
-function fillDateGaps(
-  dailyNet: Map<string, number>,
-  minDate: string,
-  maxDate: string
-): string[] {
-  const dates: string[] = [];
-  const [sy, sm, sd] = minDate.split("-").map(Number);
-  const [ey, em, ed] = maxDate.split("-").map(Number);
-  const current = new Date(sy, sm - 1, sd);
-  const end = new Date(ey, em - 1, ed);
-
-  while (current <= end) {
-    const key = current.toISOString().slice(0, 10);
-    dates.push(key);
-    if (!dailyNet.has(key)) {
-      dailyNet.set(key, 0);
-    }
-    current.setDate(current.getDate() + 1);
-  }
-  return dates;
-}
-
 interface CashflowChartProps {
   rows: MergedRow[];
 }
@@ -97,7 +75,7 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
 
     if (filtered.length === 0) return { data: [], yLimit: 0 };
 
-    // Group by date -> daily net
+    // Group by date -> daily net (income - expenses)
     const dailyNet = new Map<string, number>();
     for (const row of filtered) {
       const prev = dailyNet.get(row.date) ?? 0;
@@ -105,18 +83,26 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
       dailyNet.set(row.date, prev + delta);
     }
 
-    // Find date range
+    // Determine the full date range (rangeStart..today)
+    const today = new Date();
     const allDates = [...dailyNet.keys()].sort();
-    const sortedDates = fillDateGaps(dailyNet, allDates[0], allDates[allDates.length - 1]);
+    const startStr = rangeStart
+      ? rangeStart.toISOString().slice(0, 10)
+      : allDates[0];
+    const [sy, sm, sd] = startStr.split("-").map(Number);
+    const cursor = new Date(sy, sm - 1, sd);
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    // Cumulative running total
-    let cumulative = 0;
+    // Fill every day in the range, zero-net days become invisible bars
     let maxAbs = 0;
-    const points = sortedDates.map((date) => {
-      cumulative += dailyNet.get(date) ?? 0;
-      maxAbs = Math.max(maxAbs, Math.abs(cumulative));
-      return { date, cumulative };
-    });
+    const points: { date: string; net: number }[] = [];
+    while (cursor <= end) {
+      const key = cursor.toISOString().slice(0, 10);
+      const net = dailyNet.get(key) ?? 0;
+      maxAbs = Math.max(maxAbs, Math.abs(net));
+      points.push({ date: key, net });
+      cursor.setDate(cursor.getDate() + 1);
+    }
 
     // Symmetric domain so y=0 is always centered
     const limit = maxAbs || 1;
@@ -134,14 +120,7 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-[300px] w-full aspect-auto cursor-pointer">
-            <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-              <defs>
-                <linearGradient id="cashflowGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-cumulative)" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="var(--color-cumulative)" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-
+            <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
               <XAxis
                 dataKey="date"
                 tickLine={false}
@@ -159,29 +138,37 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
               />
 
               <ChartTooltip
-                cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1 }}
+                cursor={{ fill: "var(--muted)", opacity: 0.3 }}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
-                  const point = payload[0].payload as { date: string; cumulative: number };
+                  const point = payload[0].payload as { date: string; net: number };
+                  if (point.net === 0) return null;
                   return (
                     <div className="rounded-lg border bg-background px-3 py-2 text-sm shadow-xl">
                       <p className="text-muted-foreground">{formatDateLabel(point.date)}</p>
                       <p className="font-medium font-mono tabular-nums">
-                        {formatCurrency(point.cumulative)}
+                        {formatCurrency(point.net)}
                       </p>
                     </div>
                   );
                 }}
               />
 
-              <Area
-                dataKey="cumulative"
-                type="monotone"
-                stroke="var(--color-cumulative)"
-                strokeWidth={2}
-                fill="url(#cashflowGradient)"
-              />
-            </AreaChart>
+              <Bar dataKey="net" radius={[3, 3, 0, 0]}>
+                {data.map((entry, index) => (
+                  <Cell
+                    key={index}
+                    fill={
+                      entry.net > 0
+                        ? "#16a34a"
+                        : entry.net < 0
+                          ? "#dc2626"
+                          : "transparent"
+                    }
+                  />
+                ))}
+              </Bar>
+            </BarChart>
           </ChartContainer>
         )}
 
