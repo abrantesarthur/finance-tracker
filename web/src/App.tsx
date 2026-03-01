@@ -1,5 +1,6 @@
 import { useState } from "react";
 import CategoriesTab from "./components/CategoriesTab";
+import TransactionsTab from "./components/TransactionsTab";
 
 type Tab = "transactions" | "categories";
 
@@ -41,9 +42,7 @@ function App() {
 
       <main className="max-w-5xl mx-auto px-6 py-8">
         {activeTab === "transactions" ? (
-          <div className="text-center text-gray-500 py-12">
-            Transactions — coming soon
-          </div>
+          <TransactionsTab />
         ) : (
           <CategoriesTab />
         )}
