@@ -29,6 +29,12 @@ Personal finance tracker — single-user, localhost-only, SQLite-backed. Manages
 - These palsn should instruct using Puppeteer mcp server to verify changes.
 - Keep iterating until any issues are addressed and all validation checks pass
 
+## Commits
+
+- Start the subject line with a lowercase verb (e.g., `add`, `fix`, `refactor`, `replace`)
+- Follow with a short summary on the first line
+- Add a blank line then bullet points describing the key changes
+
 ## Design System
 
 - Use **shadcn/ui** (`@shadcn` registry) for all UI work.
