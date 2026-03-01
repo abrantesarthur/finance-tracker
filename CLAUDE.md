@@ -21,13 +21,22 @@ Personal finance tracker — single-user, localhost-only, SQLite-backed. Manages
 
 ## Dev Servers
 
-- When running `bun run dev` (or `./init.sh`) as a background task, **always stop it** (via `TaskStop`) once validation is complete. Never leave dev servers running after finishing a task.
+- When running `bun run dev` (or `./init.sh`) as a background task, **always stop it** (via `TaskStop`) once done. Never leave dev servers running after finishing a task.
 
 ## Validation
 
-- Every plan that touches the frontend **must** include validation steps (at least 2 and ideally more than 5)
-- These palsn should instruct using Puppeteer mcp server to verify changes.
+- Plans **must** include extensive testing that must pass if the execution is to be considered complete!
 - Keep iterating until any issues are addressed and all validation checks pass
+
+### Frontend
+- Have at least 2 and ideally more than 5 validation steps.
+- Use the puppeteer mcp server to verify changes.
+
+### Backend
+- Write extensive tests in appropriate files.
+- Changes to endpoints and database should have tests call an actual test  database!
+- Use bun primitives only! Before adding any external test dependency, ensure that a Bun primitive does not already exist for that!
+
 
 ## Commits
 
