@@ -6,11 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const CATEGORIES = [
-  "Food", "Housing", "Transport", "Utilities", "Healthcare",
-  "Entertainment", "Shopping", "Education", "Personal Care",
-  "Travel", "Subscriptions", "Donations", "Other",
-];
+import { CATEGORIES, CATEGORY_COLORS } from "@/lib/categories";
 
 const TIME_RANGES = [
   { value: "1W", label: "Last Week" },

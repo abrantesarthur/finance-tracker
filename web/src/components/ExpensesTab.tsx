@@ -45,11 +45,7 @@ interface Expense {
 
 const API = "http://localhost:3000";
 const PAYMENT_METHODS = ["Credit Card", "Debit Card", "Pix", "Cash"];
-const CATEGORIES = [
-  "Food", "Housing", "Transport", "Utilities", "Healthcare",
-  "Entertainment", "Shopping", "Education", "Personal Care",
-  "Travel", "Subscriptions", "Donations", "Other",
-];
+import { CATEGORIES, CATEGORY_COLORS } from "@/lib/categories";
 
 export default function ExpensesTab() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -335,7 +331,13 @@ export default function ExpensesTab() {
                     {formatCurrency(tx.amount)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {tx.category}
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: CATEGORY_COLORS[tx.category] ?? CATEGORY_COLORS.Other }}
+                      />
+                      {tx.category}
+                    </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {tx.payment_method}

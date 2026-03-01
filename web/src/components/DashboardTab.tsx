@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CATEGORY_COLORS } from "@/lib/categories";
 import {
   Table,
   TableBody,
@@ -184,7 +184,17 @@ export default function DashboardTab() {
                     {formatCurrency(row.amount)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {row._source === "expense" ? row.category || "-" : "-"}
+                    {row._source === "expense" && row.category ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className="inline-block h-2.5 w-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: CATEGORY_COLORS[row.category] ?? CATEGORY_COLORS.Other }}
+                        />
+                        {row.category}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {row._source === "expense"
