@@ -1,4 +1,17 @@
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Category {
   id: number;
@@ -63,92 +76,90 @@ export default function CategoriesTab() {
   };
 
   if (loading) {
-    return <p className="text-center text-gray-500 py-12">Loading...</p>;
+    return (
+      <div className="space-y-4 py-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-9 w-36" />
+        </div>
+        <div className="rounded-md border">
+          <div className="p-4 space-y-3">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
+        <h2 className="text-lg font-semibold text-foreground">Categories</h2>
         {!showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            + Add Category
-          </button>
+          <Button onClick={() => setShowForm(true)}>+ Add Category</Button>
         )}
       </div>
 
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-          <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoFocus
-              placeholder="Category name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSave();
-              }}
-            />
-          </div>
-          {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              Save
-            </button>
-            <button
-              onClick={handleCancel}
-              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
-            >
+        <Card className="mb-6">
+          <CardContent>
+            <div className="space-y-1.5">
+              <Label htmlFor="category-name">Name</Label>
+              <Input
+                id="category-name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+                placeholder="Category name"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSave();
+                }}
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-destructive mt-2">{error}</p>
+            )}
+          </CardContent>
+          <CardFooter className="gap-2">
+            <Button onClick={handleSave}>Save</Button>
+            <Button variant="outline" onClick={handleCancel}>
               Cancel
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardFooter>
+        </Card>
       )}
 
       {categories.length === 0 ? (
-        <p className="text-center text-gray-500 py-12">No categories yet</p>
+        <p className="text-center text-muted-foreground py-12">
+          No categories yet
+        </p>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
-                  Name
-                </th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">
-                  Created At
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Created At</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {categories.map((cat) => (
-                <tr
-                  key={cat.id}
-                  className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-4 py-3 text-gray-900">{cat.name}</td>
-                  <td className="px-4 py-3 text-gray-500">
+                <TableRow key={cat.id}>
+                  <TableCell className="text-foreground">{cat.name}</TableCell>
+                  <TableCell className="text-muted-foreground">
                     {new Date(cat.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
                     })}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
