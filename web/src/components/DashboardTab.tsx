@@ -163,6 +163,11 @@ export default function DashboardTab() {
       {/* Cashflow chart */}
       <CashflowChart rows={rows} />
 
+      <hr className="border-border mb-6" />
+
+      {/* Transactions */}
+      <h2 className="text-lg font-semibold text-foreground mb-3">Transactions</h2>
+
       {/* Filter bar */}
       <Card className="mb-6">
         <CardContent>

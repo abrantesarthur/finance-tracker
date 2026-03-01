@@ -6,7 +6,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   ChartContainer,
@@ -124,11 +124,10 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
   }, [rows, range]);
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Cashflow</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="mb-6">
+      <h2 className="text-lg font-semibold text-foreground mb-3">Cashflow</h2>
+      <Card>
+        <CardContent>
         {data.length === 0 ? (
           <div className="flex items-center justify-center h-[300px] text-muted-foreground">
             No data for the selected period.
@@ -200,6 +199,7 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
           ))}
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }
