@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import TableToolbar from "@/components/TableToolbar";
+import { getStartDateForRange } from "@/components/CashflowChart";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,8 +41,7 @@ export default function IncomeTab() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [timeRange, setTimeRange] = useState("1M");
 
   // Add form
   const [showForm, setShowForm] = useState(false);
@@ -57,8 +57,8 @@ export default function IncomeTab() {
 
   const fetchIncome = async () => {
     const params = new URLSearchParams();
+    const startDate = getStartDateForRange(timeRange)?.toISOString().slice(0, 10) ?? "";
     if (startDate) params.set("start_date", startDate);
-    if (endDate) params.set("end_date", endDate);
     const qs = params.toString();
     const res = await fetch(`${API}/income${qs ? `?${qs}` : ""}`);
     const data = await res.json();
@@ -70,8 +70,8 @@ export default function IncomeTab() {
     let ignore = false;
     const loadIncome = async () => {
       const params = new URLSearchParams();
+      const startDate = getStartDateForRange(timeRange)?.toISOString().slice(0, 10) ?? "";
       if (startDate) params.set("start_date", startDate);
-      if (endDate) params.set("end_date", endDate);
       const qs = params.toString();
       const res = await fetch(`${API}/income${qs ? `?${qs}` : ""}`);
       const data = await res.json();
@@ -84,14 +84,7 @@ export default function IncomeTab() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate]);
-
-  const clearFilters = () => {
-    setStartDate("");
-    setEndDate("");
-  };
-
-  const hasFilters = startDate || endDate;
+  }, [timeRange]);
 
   const handleSave = async () => {
     setFormError(null);
@@ -183,10 +176,16 @@ export default function IncomeTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-end mb-6">
-        {!showForm && (
-          <Button onClick={() => setShowForm(true)}>+ Add Income</Button>
-        )}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          {!showForm && (
+            <Button onClick={() => setShowForm(true)}>+ Add Income</Button>
+          )}
+        </div>
+        <TableToolbar
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+        />
       </div>
 
       {/* Add form */}
@@ -242,14 +241,6 @@ export default function IncomeTab() {
 
       {/* Income table */}
       <div className="rounded-md border">
-        <TableToolbar
-          startDate={startDate}
-          endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
-          hasFilters={!!hasFilters}
-          onClearFilters={clearFilters}
-        />
         {incomeList.length === 0 ? (
           <p className="text-center text-muted-foreground py-12">
             No income yet. Add one to get started.

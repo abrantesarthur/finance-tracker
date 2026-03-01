@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import TableToolbar from "@/components/TableToolbar";
+import { getStartDateForRange } from "@/components/CashflowChart";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,8 +56,7 @@ export default function ExpensesTab() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [timeRange, setTimeRange] = useState("1M");
   const [filterCategory, setFilterCategory] = useState("all");
 
   // Add form
@@ -75,8 +75,8 @@ export default function ExpensesTab() {
 
   const fetchExpenses = async () => {
     const params = new URLSearchParams();
+    const startDate = getStartDateForRange(timeRange)?.toISOString().slice(0, 10) ?? "";
     if (startDate) params.set("start_date", startDate);
-    if (endDate) params.set("end_date", endDate);
     if (filterCategory !== "all") params.set("category", filterCategory);
     const qs = params.toString();
     const res = await fetch(`${API}/expenses${qs ? `?${qs}` : ""}`);
@@ -89,8 +89,8 @@ export default function ExpensesTab() {
     let ignore = false;
     const loadExpenses = async () => {
       const params = new URLSearchParams();
+      const startDate = getStartDateForRange(timeRange)?.toISOString().slice(0, 10) ?? "";
       if (startDate) params.set("start_date", startDate);
-      if (endDate) params.set("end_date", endDate);
       if (filterCategory !== "all") params.set("category", filterCategory);
       const qs = params.toString();
       const res = await fetch(`${API}/expenses${qs ? `?${qs}` : ""}`);
@@ -104,16 +104,7 @@ export default function ExpensesTab() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate, filterCategory]);
-
-  const clearFilters = () => {
-    setStartDate("");
-    setEndDate("");
-    setFilterCategory("all");
-  };
-
-  const hasFilters =
-    startDate || endDate || filterCategory !== "all";
+  }, [timeRange, filterCategory]);
 
   const handleSave = async () => {
     setFormError(null);
@@ -214,10 +205,19 @@ export default function ExpensesTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-end mb-6">
-        {!showForm && (
-          <Button onClick={() => setShowForm(true)}>+ Add Expense</Button>
-        )}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          {!showForm && (
+            <Button onClick={() => setShowForm(true)}>+ Add Expense</Button>
+          )}
+        </div>
+        <TableToolbar
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          showCategoryFilter
+          filterCategory={filterCategory}
+          onFilterCategoryChange={setFilterCategory}
+        />
       </div>
 
       {/* Add form */}
@@ -306,17 +306,6 @@ export default function ExpensesTab() {
 
       {/* Expense table */}
       <div className="rounded-md border">
-        <TableToolbar
-          startDate={startDate}
-          endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
-          showCategoryFilter
-          filterCategory={filterCategory}
-          onFilterCategoryChange={setFilterCategory}
-          hasFilters={!!hasFilters}
-          onClearFilters={clearFilters}
-        />
         {expenses.length === 0 ? (
           <p className="text-center text-muted-foreground py-12">
             No expenses yet. Add one to get started.

@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import CashflowChart from "@/components/CashflowChart";
+import CashflowChart, { getStartDateForRange } from "@/components/CashflowChart";
 import TableToolbar from "@/components/TableToolbar";
 
 export interface MergedRow {
@@ -30,8 +30,7 @@ export default function DashboardTab() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [timeRange, setTimeRange] = useState("1M");
   const [filterSource, setFilterSource] = useState("all"); // all | expense | income
   const [filterCategory, setFilterCategory] = useState("all");
 
@@ -41,13 +40,10 @@ export default function DashboardTab() {
       const expenseParams = new URLSearchParams();
       const incomeParams = new URLSearchParams();
 
+      const startDate = getStartDateForRange(timeRange)?.toISOString().slice(0, 10) ?? "";
       if (startDate) {
         expenseParams.set("start_date", startDate);
         incomeParams.set("start_date", startDate);
-      }
-      if (endDate) {
-        expenseParams.set("end_date", endDate);
-        incomeParams.set("end_date", endDate);
       }
       if (filterCategory !== "all") {
         expenseParams.set("category", filterCategory);
@@ -95,20 +91,7 @@ export default function DashboardTab() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate, filterSource, filterCategory]);
-
-  const clearFilters = () => {
-    setStartDate("");
-    setEndDate("");
-    setFilterSource("all");
-    setFilterCategory("all");
-  };
-
-  const hasFilters =
-    startDate ||
-    endDate ||
-    filterSource !== "all" ||
-    filterCategory !== "all";
+  }, [timeRange, filterSource, filterCategory]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -145,20 +128,11 @@ export default function DashboardTab() {
 
   return (
     <div>
-      {/* Cashflow chart */}
-      <CashflowChart rows={rows} />
-
-      <hr className="border-border mb-6" />
-
-      {/* Transactions */}
-      <h2 className="text-lg font-semibold text-foreground mb-3">Transactions</h2>
-
-      <div className="rounded-md border">
+      {/* Filter bar */}
+      <div className="mb-4">
         <TableToolbar
-          startDate={startDate}
-          endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
           showTypeFilter
           filterSource={filterSource}
           onFilterSourceChange={(v) => {
@@ -168,10 +142,18 @@ export default function DashboardTab() {
           showCategoryFilter={filterSource === "expense"}
           filterCategory={filterCategory}
           onFilterCategoryChange={setFilterCategory}
-          hasFilters={!!hasFilters}
-          onClearFilters={clearFilters}
         />
+      </div>
 
+      {/* Cashflow chart */}
+      <CashflowChart rows={rows} timeRange={timeRange} />
+
+      <hr className="border-border mb-6" />
+
+      {/* Transactions */}
+      <h2 className="text-lg font-semibold text-foreground mb-3">Transactions</h2>
+
+      <div className="rounded-md border">
         {/* Table */}
         {rows.length === 0 ? (
           <p className="text-center text-muted-foreground py-12">

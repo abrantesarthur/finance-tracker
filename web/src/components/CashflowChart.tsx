@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Bar,
   BarChart,
@@ -8,7 +8,6 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   ChartContainer,
   ChartTooltip,
@@ -23,10 +22,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const TIME_RANGES = ["1W", "1M", "3M", "YTD", "1Y", "All"] as const;
-type TimeRange = (typeof TIME_RANGES)[number];
-
-function getStartDateForRange(range: TimeRange): Date | null {
+export function getStartDateForRange(range: string): Date | null {
   const now = new Date();
   switch (range) {
     case "1W":
@@ -40,6 +36,8 @@ function getStartDateForRange(range: TimeRange): Date | null {
     case "1Y":
       return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
     case "All":
+      return null;
+    default:
       return null;
   }
 }
@@ -61,19 +59,18 @@ function formatCurrency(amount: number): string {
 
 interface CashflowChartProps {
   rows: MergedRow[];
+  timeRange: string;
 }
 
-export default function CashflowChart({ rows }: CashflowChartProps) {
-  const [range, setRange] = useState<TimeRange>("3M");
-
-  const { data, yLimit } = useMemo(() => {
+export default function CashflowChart({ rows, timeRange }: CashflowChartProps) {
+  const { data, yLimit, aggregate } = useMemo(() => {
     // Filter by time range
-    const rangeStart = getStartDateForRange(range);
+    const rangeStart = getStartDateForRange(timeRange);
     const filtered = rangeStart
       ? rows.filter((r) => r.date >= rangeStart.toISOString().slice(0, 10))
       : rows;
 
-    if (filtered.length === 0) return { data: [], yLimit: 0 };
+    if (filtered.length === 0) return { data: [], yLimit: 0, aggregate: 0 };
 
     // Group by date -> daily net (income - expenses)
     const dailyNet = new Map<string, number>();
@@ -106,12 +103,19 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
 
     // Symmetric domain so y=0 is always centered
     const limit = maxAbs || 1;
-    return { data: points, yLimit: limit };
-  }, [rows, range]);
+    const aggregate = points.reduce((sum, p) => sum + p.net, 0);
+    return { data: points, yLimit: limit, aggregate };
+  }, [rows, timeRange]);
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg font-semibold text-foreground mb-3">Cashflow</h2>
+      <h2 className="text-lg font-semibold text-foreground mb-3">
+        Cashflow{data.length > 0 && (
+          <span className="text-sm font-medium ml-1">
+            (<span className={`font-mono tabular-nums ${aggregate >= 0 ? "text-green-500" : "text-red-500"}`}>{aggregate >= 0 ? "+" : ""}{formatCurrency(aggregate)}</span>)
+          </span>
+        )}
+      </h2>
       <Card>
         <CardContent>
         {data.length === 0 ? (
@@ -173,20 +177,6 @@ export default function CashflowChart({ rows }: CashflowChartProps) {
             </BarChart>
           </ChartContainer>
         )}
-
-        {/* Time range selector */}
-        <div className="flex items-center gap-1 pt-3">
-          {TIME_RANGES.map((r) => (
-            <Button
-              key={r}
-              variant={range === r ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setRange(r)}
-            >
-              {r}
-            </Button>
-          ))}
-        </div>
       </CardContent>
       </Card>
     </div>
