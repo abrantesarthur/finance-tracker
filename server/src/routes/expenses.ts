@@ -22,9 +22,6 @@ export const expensesRoutes = new Elysia()
     if (query.category) {
       conditions.push(eq(expenses.category, query.category));
     }
-    if (query.type) {
-      conditions.push(eq(expenses.type, query.type));
-    }
 
     const rows = await db
       .select({
@@ -34,7 +31,6 @@ export const expensesRoutes = new Elysia()
         amount: expenses.amount,
         payment_method: expenses.paymentMethod,
         category: expenses.category,
-        type: expenses.type,
         created_at: expenses.createdAt,
       })
       .from(expenses)
@@ -46,16 +42,11 @@ export const expensesRoutes = new Elysia()
   .post(
     "/expenses",
     async ({ body, set }) => {
-      const { description, date, amount, payment_method, category, type } = body;
+      const { description, date, amount, payment_method, category } = body;
 
-      if (!description || !date || amount == null || !payment_method || !category || !type) {
+      if (!description || !date || amount == null || !payment_method || !category) {
         set.status = 400;
         return { error: "All fields are required" };
-      }
-
-      if (type !== "subscription" && type !== "discretionary") {
-        set.status = 400;
-        return { error: "Type must be 'subscription' or 'discretionary'" };
       }
 
       const [created] = await db
@@ -66,7 +57,6 @@ export const expensesRoutes = new Elysia()
           amount,
           paymentMethod: payment_method,
           category,
-          type,
         })
         .returning();
 
@@ -80,7 +70,6 @@ export const expensesRoutes = new Elysia()
         amount: t.Number(),
         payment_method: t.String(),
         category: t.String(),
-        type: t.String(),
       }),
     }
   )

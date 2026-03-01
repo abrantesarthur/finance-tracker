@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -13,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,7 +38,6 @@ interface Expense {
   amount: number;
   payment_method: string;
   category: string;
-  type: string;
   created_at: string;
 }
 
@@ -60,7 +57,6 @@ export default function ExpensesTab() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
-  const [filterType, setFilterType] = useState("all");
 
   // Add form
   const [showForm, setShowForm] = useState(false);
@@ -71,9 +67,6 @@ export default function ExpensesTab() {
   const [formAmount, setFormAmount] = useState("");
   const [formPayment, setFormPayment] = useState("");
   const [formCategory, setFormCategory] = useState("none");
-  const [formType, setFormType] = useState<"subscription" | "discretionary">(
-    "discretionary"
-  );
   const [formError, setFormError] = useState<string | null>(null);
 
   // Delete confirmation
@@ -84,7 +77,6 @@ export default function ExpensesTab() {
     if (startDate) params.set("start_date", startDate);
     if (endDate) params.set("end_date", endDate);
     if (filterCategory !== "all") params.set("category", filterCategory);
-    if (filterType !== "all") params.set("type", filterType);
     const qs = params.toString();
     const res = await fetch(`${API}/expenses${qs ? `?${qs}` : ""}`);
     const data = await res.json();
@@ -99,7 +91,6 @@ export default function ExpensesTab() {
       if (startDate) params.set("start_date", startDate);
       if (endDate) params.set("end_date", endDate);
       if (filterCategory !== "all") params.set("category", filterCategory);
-      if (filterType !== "all") params.set("type", filterType);
       const qs = params.toString();
       const res = await fetch(`${API}/expenses${qs ? `?${qs}` : ""}`);
       const data = await res.json();
@@ -112,17 +103,16 @@ export default function ExpensesTab() {
     return () => {
       ignore = true;
     };
-  }, [startDate, endDate, filterCategory, filterType]);
+  }, [startDate, endDate, filterCategory]);
 
   const clearFilters = () => {
     setStartDate("");
     setEndDate("");
     setFilterCategory("all");
-    setFilterType("all");
   };
 
   const hasFilters =
-    startDate || endDate || filterCategory !== "all" || filterType !== "all";
+    startDate || endDate || filterCategory !== "all";
 
   const handleSave = async () => {
     setFormError(null);
@@ -150,7 +140,6 @@ export default function ExpensesTab() {
         amount: Number(formAmount),
         payment_method: formPayment.trim(),
         category: formCategory,
-        type: formType,
       }),
     });
 
@@ -170,7 +159,6 @@ export default function ExpensesTab() {
     setFormAmount("");
     setFormPayment("");
     setFormCategory("none");
-    setFormType("discretionary");
     setFormError(null);
     setShowForm(false);
   };
@@ -302,29 +290,6 @@ export default function ExpensesTab() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label>Type</Label>
-                <RadioGroup
-                  value={formType}
-                  onValueChange={(v) =>
-                    setFormType(v as "subscription" | "discretionary")
-                  }
-                  className="flex gap-4 mt-1"
-                >
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="discretionary" id="type-disc" />
-                    <Label htmlFor="type-disc" className="font-normal">
-                      Discretionary
-                    </Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="subscription" id="type-sub" />
-                    <Label htmlFor="type-sub" className="font-normal">
-                      Subscription
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
             </div>
             {formError && (
               <p className="text-sm text-destructive mt-3">{formError}</p>
@@ -380,19 +345,6 @@ export default function ExpensesTab() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Type</Label>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="subscription">Subscription</SelectItem>
-                  <SelectItem value="discretionary">Discretionary</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             {hasFilters && (
               <Button variant="ghost" onClick={clearFilters}>
                 Clear filters
@@ -417,7 +369,6 @@ export default function ExpensesTab() {
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Payment Method</TableHead>
-                <TableHead>Type</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -438,15 +389,6 @@ export default function ExpensesTab() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {tx.payment_method}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        tx.type === "subscription" ? "default" : "secondary"
-                      }
-                    >
-                      {tx.type}
-                    </Badge>
                   </TableCell>
                   <TableCell className="text-center">
                     <Button

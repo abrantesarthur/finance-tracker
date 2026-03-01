@@ -25,7 +25,6 @@ beforeAll(() => {
       amount REAL NOT NULL,
       payment_method TEXT NOT NULL,
       category TEXT NOT NULL,
-      type TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
@@ -45,8 +44,8 @@ describe("GET /expenses", () => {
 
   test("returns expenses with category text", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category, type)
-      VALUES ('Groceries', '2024-01-15', -50, 'Credit Card', 'Food', 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category)
+      VALUES ('Groceries', '2024-01-15', -50, 'Credit Card', 'Food')
     `);
 
     const res = await app.handle(new Request("http://localhost/expenses"));
@@ -57,9 +56,9 @@ describe("GET /expenses", () => {
 
   test("filters by start_date", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category, type)
-      VALUES ('Old', '2024-01-01', -10, 'Cash', 'Food', 'discretionary'),
-             ('New', '2024-03-01', -20, 'Cash', 'Food', 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category)
+      VALUES ('Old', '2024-01-01', -10, 'Cash', 'Food'),
+             ('New', '2024-03-01', -20, 'Cash', 'Food')
     `);
 
     const res = await app.handle(
@@ -72,9 +71,9 @@ describe("GET /expenses", () => {
 
   test("filters by end_date", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category, type)
-      VALUES ('Old', '2024-01-01', -10, 'Cash', 'Food', 'discretionary'),
-             ('New', '2024-03-01', -20, 'Cash', 'Food', 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category)
+      VALUES ('Old', '2024-01-01', -10, 'Cash', 'Food'),
+             ('New', '2024-03-01', -20, 'Cash', 'Food')
     `);
 
     const res = await app.handle(
@@ -87,9 +86,9 @@ describe("GET /expenses", () => {
 
   test("filters by category", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category, type)
-      VALUES ('A', '2024-01-01', -10, 'Cash', 'Food', 'discretionary'),
-             ('B', '2024-01-01', -20, 'Cash', 'Housing', 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category)
+      VALUES ('A', '2024-01-01', -10, 'Cash', 'Food'),
+             ('B', '2024-01-01', -20, 'Cash', 'Housing')
     `);
 
     const res = await app.handle(
@@ -98,21 +97,6 @@ describe("GET /expenses", () => {
     const data = await res.json();
     expect(data.expenses).toHaveLength(1);
     expect(data.expenses[0].description).toBe("B");
-  });
-
-  test("filters by type", async () => {
-    sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category, type)
-      VALUES ('Sub', '2024-01-01', -10, 'Cash', 'Food', 'subscription'),
-             ('Disc', '2024-01-01', -20, 'Cash', 'Food', 'discretionary')
-    `);
-
-    const res = await app.handle(
-      new Request("http://localhost/expenses?type=subscription")
-    );
-    const data = await res.json();
-    expect(data.expenses).toHaveLength(1);
-    expect(data.expenses[0].description).toBe("Sub");
   });
 });
 
@@ -128,7 +112,6 @@ describe("POST /expenses", () => {
           amount: -15,
           payment_method: "Cash",
           category: "Food",
-          type: "discretionary",
         }),
       })
     );
@@ -150,32 +133,12 @@ describe("POST /expenses", () => {
     );
     expect(res.status).toBe(400);
   });
-
-  test("rejects invalid type (400)", async () => {
-    const res = await app.handle(
-      new Request("http://localhost/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: "Lunch",
-          date: "2024-01-15",
-          amount: -15,
-          payment_method: "Cash",
-          category: "Food",
-          type: "invalid",
-        }),
-      })
-    );
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data.error).toBe("Type must be 'subscription' or 'discretionary'");
-  });
 });
 
 describe("DELETE /expenses/:id", () => {
   test("deletes existing record", async () => {
     sqlite.exec(
-      "INSERT INTO expenses (description, date, amount, payment_method, category, type) VALUES ('Del', '2024-01-01', -10, 'Cash', 'Food', 'discretionary')"
+      "INSERT INTO expenses (description, date, amount, payment_method, category) VALUES ('Del', '2024-01-01', -10, 'Cash', 'Food')"
     );
     const rows = sqlite.query("SELECT id FROM expenses WHERE description = 'Del'").all() as { id: number }[];
     const id = rows[0].id;

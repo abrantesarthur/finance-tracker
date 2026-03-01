@@ -8,7 +8,6 @@ export const expenses = sqliteTable("expenses", {
   amount: real("amount").notNull(),
   paymentMethod: text("payment_method").notNull(),
   category: text("category").notNull(),
-  type: text("type").notNull(),
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
