@@ -1,11 +1,10 @@
 import { useState } from "react";
-import CategoriesTab from "./components/CategoriesTab";
 import ExpensesTab from "./components/ExpensesTab";
 import IncomeTab from "./components/IncomeTab";
 import DashboardTab from "./components/DashboardTab";
 import { ModeToggle } from "./components/mode-toggle";
 
-type Tab = "dashboard" | "expenses" | "income" | "categories";
+type Tab = "dashboard" | "expenses" | "income";
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -14,7 +13,6 @@ function App() {
     { key: "dashboard", label: "Dashboard" },
     { key: "expenses", label: "Expenses" },
     { key: "income", label: "Income" },
-    { key: "categories", label: "Categories" },
   ];
 
   return (
@@ -50,7 +48,6 @@ function App() {
         {activeTab === "dashboard" && <DashboardTab />}
         {activeTab === "expenses" && <ExpensesTab />}
         {activeTab === "income" && <IncomeTab />}
-        {activeTab === "categories" && <CategoriesTab />}
       </main>
     </div>
   );

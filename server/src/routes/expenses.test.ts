@@ -6,7 +6,6 @@ import * as schema from "../db/schema";
 
 // Set up in-memory DB and mock the db module before importing routes
 const sqlite = new Database(":memory:");
-sqlite.exec("PRAGMA foreign_keys = ON");
 const testDb = drizzle(sqlite, { schema });
 
 mock.module("../db", () => ({ db: testDb }));
@@ -19,20 +18,13 @@ const app = new Elysia().use(expensesRoutes);
 
 beforeAll(() => {
   sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS budget_categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-  sqlite.exec(`
     CREATE TABLE IF NOT EXISTS expenses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       description TEXT NOT NULL,
       date TEXT NOT NULL,
       amount REAL NOT NULL,
       payment_method TEXT NOT NULL,
-      category_id INTEGER REFERENCES budget_categories(id),
+      category TEXT NOT NULL,
       type TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
@@ -41,10 +33,6 @@ beforeAll(() => {
 
 beforeEach(() => {
   sqlite.exec("DELETE FROM expenses");
-  sqlite.exec("DELETE FROM budget_categories");
-  // Seed a test category
-  sqlite.exec("INSERT INTO budget_categories (id, name) VALUES (1, 'Food')");
-  sqlite.exec("INSERT INTO budget_categories (id, name) VALUES (2, 'Rent')");
 });
 
 describe("GET /expenses", () => {
@@ -55,23 +43,23 @@ describe("GET /expenses", () => {
     expect(data.expenses).toEqual([]);
   });
 
-  test("returns expenses with category names", async () => {
+  test("returns expenses with category text", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category_id, type)
-      VALUES ('Groceries', '2024-01-15', -50, 'Credit Card', 1, 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category, type)
+      VALUES ('Groceries', '2024-01-15', -50, 'Credit Card', 'Food', 'discretionary')
     `);
 
     const res = await app.handle(new Request("http://localhost/expenses"));
     const data = await res.json();
     expect(data.expenses).toHaveLength(1);
-    expect(data.expenses[0].category_name).toBe("Food");
+    expect(data.expenses[0].category).toBe("Food");
   });
 
   test("filters by start_date", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category_id, type)
-      VALUES ('Old', '2024-01-01', -10, 'Cash', 1, 'discretionary'),
-             ('New', '2024-03-01', -20, 'Cash', 1, 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category, type)
+      VALUES ('Old', '2024-01-01', -10, 'Cash', 'Food', 'discretionary'),
+             ('New', '2024-03-01', -20, 'Cash', 'Food', 'discretionary')
     `);
 
     const res = await app.handle(
@@ -84,9 +72,9 @@ describe("GET /expenses", () => {
 
   test("filters by end_date", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category_id, type)
-      VALUES ('Old', '2024-01-01', -10, 'Cash', 1, 'discretionary'),
-             ('New', '2024-03-01', -20, 'Cash', 1, 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category, type)
+      VALUES ('Old', '2024-01-01', -10, 'Cash', 'Food', 'discretionary'),
+             ('New', '2024-03-01', -20, 'Cash', 'Food', 'discretionary')
     `);
 
     const res = await app.handle(
@@ -97,15 +85,15 @@ describe("GET /expenses", () => {
     expect(data.expenses[0].description).toBe("Old");
   });
 
-  test("filters by category_id", async () => {
+  test("filters by category", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category_id, type)
-      VALUES ('A', '2024-01-01', -10, 'Cash', 1, 'discretionary'),
-             ('B', '2024-01-01', -20, 'Cash', 2, 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category, type)
+      VALUES ('A', '2024-01-01', -10, 'Cash', 'Food', 'discretionary'),
+             ('B', '2024-01-01', -20, 'Cash', 'Housing', 'discretionary')
     `);
 
     const res = await app.handle(
-      new Request("http://localhost/expenses?category_id=2")
+      new Request("http://localhost/expenses?category=Housing")
     );
     const data = await res.json();
     expect(data.expenses).toHaveLength(1);
@@ -114,9 +102,9 @@ describe("GET /expenses", () => {
 
   test("filters by type", async () => {
     sqlite.exec(`
-      INSERT INTO expenses (description, date, amount, payment_method, category_id, type)
-      VALUES ('Sub', '2024-01-01', -10, 'Cash', 1, 'subscription'),
-             ('Disc', '2024-01-01', -20, 'Cash', 1, 'discretionary')
+      INSERT INTO expenses (description, date, amount, payment_method, category, type)
+      VALUES ('Sub', '2024-01-01', -10, 'Cash', 'Food', 'subscription'),
+             ('Disc', '2024-01-01', -20, 'Cash', 'Food', 'discretionary')
     `);
 
     const res = await app.handle(
@@ -139,7 +127,7 @@ describe("POST /expenses", () => {
           date: "2024-01-15",
           amount: -15,
           payment_method: "Cash",
-          category_id: 1,
+          category: "Food",
           type: "discretionary",
         }),
       })
@@ -147,6 +135,7 @@ describe("POST /expenses", () => {
     expect(res.status).toBe(201);
     const data = await res.json();
     expect(data.description).toBe("Lunch");
+    expect(data.category).toBe("Food");
   });
 
   test("rejects missing fields (400)", async () => {
@@ -172,7 +161,7 @@ describe("POST /expenses", () => {
           date: "2024-01-15",
           amount: -15,
           payment_method: "Cash",
-          category_id: 1,
+          category: "Food",
           type: "invalid",
         }),
       })
@@ -181,32 +170,12 @@ describe("POST /expenses", () => {
     const data = await res.json();
     expect(data.error).toBe("Type must be 'subscription' or 'discretionary'");
   });
-
-  test("rejects nonexistent category (400)", async () => {
-    const res = await app.handle(
-      new Request("http://localhost/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: "Lunch",
-          date: "2024-01-15",
-          amount: -15,
-          payment_method: "Cash",
-          category_id: 999,
-          type: "discretionary",
-        }),
-      })
-    );
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data.error).toBe("Category not found");
-  });
 });
 
 describe("DELETE /expenses/:id", () => {
   test("deletes existing record", async () => {
     sqlite.exec(
-      "INSERT INTO expenses (description, date, amount, payment_method, category_id, type) VALUES ('Del', '2024-01-01', -10, 'Cash', 1, 'discretionary')"
+      "INSERT INTO expenses (description, date, amount, payment_method, category, type) VALUES ('Del', '2024-01-01', -10, 'Cash', 'Food', 'discretionary')"
     );
     const rows = sqlite.query("SELECT id FROM expenses WHERE description = 'Del'").all() as { id: number }[];
     const id = rows[0].id;

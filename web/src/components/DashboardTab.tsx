@@ -27,22 +27,21 @@ interface MergedRow {
   date: string;
   amount: number;
   payment_method?: string;
-  category_name?: string;
+  category?: string;
   type?: string;
   created_at: string;
   _source: "expense" | "income";
 }
 
-interface Category {
-  id: number;
-  name: string;
-}
-
 const API = "http://localhost:3000";
+const CATEGORIES = [
+  "Food", "Housing", "Transport", "Utilities", "Healthcare",
+  "Entertainment", "Shopping", "Education", "Personal Care",
+  "Travel", "Subscriptions", "Donations", "Other",
+];
 
 export default function DashboardTab() {
   const [rows, setRows] = useState<MergedRow[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -51,19 +50,6 @@ export default function DashboardTab() {
   const [filterSource, setFilterSource] = useState("all"); // all | expense | income
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterExpenseType, setFilterExpenseType] = useState("all"); // all | subscription | discretionary
-
-  useEffect(() => {
-    let ignore = false;
-    const loadCategories = async () => {
-      const res = await fetch(`${API}/categories`);
-      const data = await res.json();
-      if (!ignore) setCategories(data.categories);
-    };
-    loadCategories();
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -80,7 +66,7 @@ export default function DashboardTab() {
         incomeParams.set("end_date", endDate);
       }
       if (filterCategory !== "all") {
-        expenseParams.set("category_id", filterCategory);
+        expenseParams.set("category", filterCategory);
       }
       if (filterExpenseType !== "all") {
         expenseParams.set("type", filterExpenseType);
@@ -238,9 +224,9 @@ export default function DashboardTab() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={String(cat.id)}>
-                          {cat.name}
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -311,7 +297,7 @@ export default function DashboardTab() {
                     {formatCurrency(row.amount)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {row._source === "expense" ? row.category_name || "-" : "-"}
+                    {row._source === "expense" ? row.category || "-" : "-"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {row._source === "expense"

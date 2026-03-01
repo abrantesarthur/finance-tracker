@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { db } from "../db";
-import { expenses, budgetCategories } from "../db/schema";
+import { expenses } from "../db/schema";
 import { eq, desc, gte, lte, and } from "drizzle-orm";
 
 export const expensesRoutes = new Elysia()
@@ -19,8 +19,8 @@ export const expensesRoutes = new Elysia()
     if (query.end_date) {
       conditions.push(lte(expenses.date, query.end_date));
     }
-    if (query.category_id) {
-      conditions.push(eq(expenses.categoryId, Number(query.category_id)));
+    if (query.category) {
+      conditions.push(eq(expenses.category, query.category));
     }
     if (query.type) {
       conditions.push(eq(expenses.type, query.type));
@@ -33,13 +33,11 @@ export const expensesRoutes = new Elysia()
         date: expenses.date,
         amount: expenses.amount,
         payment_method: expenses.paymentMethod,
-        category_id: expenses.categoryId,
-        category_name: budgetCategories.name,
+        category: expenses.category,
         type: expenses.type,
         created_at: expenses.createdAt,
       })
       .from(expenses)
-      .leftJoin(budgetCategories, eq(expenses.categoryId, budgetCategories.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(expenses.date), desc(expenses.createdAt));
 
@@ -48,9 +46,9 @@ export const expensesRoutes = new Elysia()
   .post(
     "/expenses",
     async ({ body, set }) => {
-      const { description, date, amount, payment_method, category_id, type } = body;
+      const { description, date, amount, payment_method, category, type } = body;
 
-      if (!description || !date || amount == null || !payment_method || !category_id || !type) {
+      if (!description || !date || amount == null || !payment_method || !category || !type) {
         set.status = 400;
         return { error: "All fields are required" };
       }
@@ -60,17 +58,6 @@ export const expensesRoutes = new Elysia()
         return { error: "Type must be 'subscription' or 'discretionary'" };
       }
 
-      const category = await db
-        .select()
-        .from(budgetCategories)
-        .where(eq(budgetCategories.id, category_id))
-        .limit(1);
-
-      if (category.length === 0) {
-        set.status = 400;
-        return { error: "Category not found" };
-      }
-
       const [created] = await db
         .insert(expenses)
         .values({
@@ -78,7 +65,7 @@ export const expensesRoutes = new Elysia()
           date,
           amount,
           paymentMethod: payment_method,
-          categoryId: category_id,
+          category,
           type,
         })
         .returning();
@@ -92,7 +79,7 @@ export const expensesRoutes = new Elysia()
         date: t.String(),
         amount: t.Number(),
         payment_method: t.String(),
-        category_id: t.Number(),
+        category: t.String(),
         type: t.String(),
       }),
     }

@@ -39,23 +39,21 @@ interface Expense {
   date: string;
   amount: number;
   payment_method: string;
-  category_id: number;
-  category_name: string;
+  category: string;
   type: string;
   created_at: string;
 }
 
-interface Category {
-  id: number;
-  name: string;
-}
-
 const API = "http://localhost:3000";
 const PAYMENT_METHODS = ["Credit Card", "Debit Card", "Pix", "Cash"];
+const CATEGORIES = [
+  "Food", "Housing", "Transport", "Utilities", "Healthcare",
+  "Entertainment", "Shopping", "Education", "Personal Care",
+  "Travel", "Subscriptions", "Donations", "Other",
+];
 
 export default function ExpensesTab() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -85,7 +83,7 @@ export default function ExpensesTab() {
     const params = new URLSearchParams();
     if (startDate) params.set("start_date", startDate);
     if (endDate) params.set("end_date", endDate);
-    if (filterCategory !== "all") params.set("category_id", filterCategory);
+    if (filterCategory !== "all") params.set("category", filterCategory);
     if (filterType !== "all") params.set("type", filterType);
     const qs = params.toString();
     const res = await fetch(`${API}/expenses${qs ? `?${qs}` : ""}`);
@@ -96,24 +94,11 @@ export default function ExpensesTab() {
 
   useEffect(() => {
     let ignore = false;
-    const loadCategories = async () => {
-      const res = await fetch(`${API}/categories`);
-      const data = await res.json();
-      if (!ignore) setCategories(data.categories);
-    };
-    loadCategories();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let ignore = false;
     const loadExpenses = async () => {
       const params = new URLSearchParams();
       if (startDate) params.set("start_date", startDate);
       if (endDate) params.set("end_date", endDate);
-      if (filterCategory !== "all") params.set("category_id", filterCategory);
+      if (filterCategory !== "all") params.set("category", filterCategory);
       if (filterType !== "all") params.set("type", filterType);
       const qs = params.toString();
       const res = await fetch(`${API}/expenses${qs ? `?${qs}` : ""}`);
@@ -164,7 +149,7 @@ export default function ExpensesTab() {
         date: formDate,
         amount: Number(formAmount),
         payment_method: formPayment.trim(),
-        category_id: Number(formCategory),
+        category: formCategory,
         type: formType,
       }),
     });
@@ -309,9 +294,9 @@ export default function ExpensesTab() {
                     <SelectItem value="none" disabled>
                       Select a category
                     </SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={String(cat.id)}>
-                        {cat.name}
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -387,9 +372,9 @@ export default function ExpensesTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={String(cat.id)}>
-                      {cat.name}
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -449,7 +434,7 @@ export default function ExpensesTab() {
                     {formatCurrency(tx.amount)}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {tx.category_name}
+                    {tx.category}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {tx.payment_method}
