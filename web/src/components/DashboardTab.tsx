@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { FilterIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -168,83 +174,89 @@ export default function DashboardTab() {
       {/* Transactions */}
       <h2 className="text-lg font-semibold text-foreground mb-3">Transactions</h2>
 
-      {/* Filter bar */}
-      <Card className="mb-6">
-        <CardContent>
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">From</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-auto"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">To</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-auto"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Type</Label>
-              <Select value={filterSource} onValueChange={(v) => {
-                setFilterSource(v);
-                if (v === "income") {
-                  setFilterCategory("all");
-                }
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {filterSource !== "income" && (
+      <div className="rounded-md border">
+        {/* Toolbar */}
+        <div className="flex items-center justify-end gap-1 px-4 py-2 border-b">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="relative inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                <HugeiconsIcon icon={FilterIcon} size={16} />
+                {hasFilters && (
+                  <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary" />
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-64 space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-xs">Category</Label>
-                <Select
-                  value={filterCategory}
-                  onValueChange={setFilterCategory}
-                >
+                <Label className="text-xs">From</Label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">To</Label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Type</Label>
+                <Select value={filterSource} onValueChange={(v) => {
+                  setFilterSource(v);
+                  if (v !== "expense") {
+                    setFilterCategory("all");
+                  }
+                }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Categories" />
+                    <SelectValue placeholder="All" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="expense">Expense</SelectItem>
+                    <SelectItem value="income">Income</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            )}
-            {hasFilters && (
-              <Button variant="ghost" onClick={clearFilters}>
-                Clear filters
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {filterSource === "expense" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Category</Label>
+                  <Select
+                    value={filterCategory}
+                    onValueChange={setFilterCategory}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {hasFilters && (
+                <Button variant="ghost" size="sm" className="w-full" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
 
-      {/* Merged table */}
-      {rows.length === 0 ? (
-        <p className="text-center text-muted-foreground py-12">
-          No records found.
-        </p>
-      ) : (
-        <div className="rounded-md border">
+        {/* Table */}
+        {rows.length === 0 ? (
+          <p className="text-center text-muted-foreground py-12">
+            No records found.
+          </p>
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -295,8 +307,8 @@ export default function DashboardTab() {
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
