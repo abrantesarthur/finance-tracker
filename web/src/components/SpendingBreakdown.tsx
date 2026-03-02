@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { PieChart, Pie, Cell, Label } from "recharts";
+import { PieChart, Pie, Cell, Label, Customized } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -22,54 +22,152 @@ function formatCurrency(amount: number): string {
 }
 
 const RADIAN = Math.PI / 180;
+const LABEL_HEIGHT = 30; // min vertical space per label
 
-function renderOuterLabel(props: {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  outerRadius: number;
-  category: string;
-  amount: number;
-  percentage: number;
-  fill: string;
-}) {
-  const { cx, cy, midAngle, outerRadius, category, amount, percentage, fill } =
-    props;
-  const labelRadius = outerRadius + 24;
-  const x = cx + labelRadius * Math.cos(-midAngle * RADIAN);
-  const y = cy + labelRadius * Math.sin(-midAngle * RADIAN);
-  const isRight = x > cx;
-  const anchor = isRight ? "start" : "end";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function LabelsWithConnectors(props: any) {
+  const { formattedGraphicalItems } = props;
+  if (!formattedGraphicalItems?.length) return null;
+
+  const pieItem = formattedGraphicalItems[0];
+  const sectors = pieItem?.props?.sectors;
+  if (!sectors?.length) return null;
+
+  const { cx, cy, outerRadius } = sectors[0];
+  const connectorLen = 16; // length of the horizontal tail
+  const labelOffset = 24; // gap from outer edge to elbow point
+
+  interface LabelItem {
+    naturalY: number;
+    y: number;
+    midAngle: number;
+    category: string;
+    amount: number;
+    percentage: number;
+    fill: string;
+    isRight: boolean;
+  }
+
+  // Build label items from sector geometry
+  const items: LabelItem[] = sectors.map(
+    (s: {
+      midAngle: number;
+      payload: { category: string; amount: number; percentage: number };
+      fill: string;
+    }) => {
+      const angle = s.midAngle;
+      const rad = -angle * RADIAN;
+      const naturalY = cy + (outerRadius + labelOffset) * Math.sin(rad);
+      const isRight = Math.cos(rad) >= 0;
+      return {
+        naturalY,
+        y: naturalY,
+        midAngle: angle,
+        category: s.payload.category,
+        amount: s.payload.amount,
+        percentage: s.payload.percentage,
+        fill: s.fill,
+        isRight,
+      };
+    }
+  );
+
+  // Split into left/right groups and resolve overlaps independently
+  const rightGroup = items.filter((l) => l.isRight);
+  const leftGroup = items.filter((l) => !l.isRight);
+
+  function resolveOverlaps(group: LabelItem[]) {
+    if (group.length <= 1) return;
+    // Sort by natural Y
+    group.sort((a, b) => a.naturalY - b.naturalY);
+
+    // Push apart overlapping labels
+    for (let i = 1; i < group.length; i++) {
+      const gap = group[i].y - group[i - 1].y;
+      if (gap < LABEL_HEIGHT) {
+        group[i].y = group[i - 1].y + LABEL_HEIGHT;
+      }
+    }
+
+    // Re-center around the group's original center of mass
+    const originalCenter =
+      group.reduce((s, l) => s + l.naturalY, 0) / group.length;
+    const currentCenter =
+      group.reduce((s, l) => s + l.y, 0) / group.length;
+    const shift = originalCenter - currentCenter;
+    for (const l of group) {
+      l.y += shift;
+    }
+
+    // Second pass to ensure no overlaps after re-centering
+    for (let i = 1; i < group.length; i++) {
+      const gap = group[i].y - group[i - 1].y;
+      if (gap < LABEL_HEIGHT) {
+        group[i].y = group[i - 1].y + LABEL_HEIGHT;
+      }
+    }
+  }
+
+  resolveOverlaps(rightGroup);
+  resolveOverlaps(leftGroup);
 
   return (
     <g>
-      {/* Colored dot */}
-      <circle
-        cx={isRight ? x : x}
-        cy={y - 4}
-        r={4}
-        fill={fill}
-      />
-      {/* Category name */}
-      <text
-        x={isRight ? x + 10 : x - 10}
-        y={y}
-        textAnchor={anchor}
-        dominantBaseline="middle"
-        className="fill-foreground text-xs font-medium"
-      >
-        {category}
-      </text>
-      {/* Amount + percentage */}
-      <text
-        x={isRight ? x + 10 : x - 10}
-        y={y + 15}
-        textAnchor={anchor}
-        dominantBaseline="middle"
-        className="fill-muted-foreground text-[10px]"
-      >
-        {formatCurrency(amount)} ({percentage}%)
-      </text>
+      {items.map((item) => {
+        // Point on the outer edge of the pie
+        const edgeX =
+          cx + outerRadius * Math.cos(-item.midAngle * RADIAN);
+        const edgeY =
+          cy + outerRadius * Math.sin(-item.midAngle * RADIAN);
+
+        // Elbow point — extends outward from edge
+        const elbowX = item.isRight
+          ? cx + outerRadius + labelOffset
+          : cx - outerRadius - labelOffset;
+        const elbowY = item.y;
+
+        // Label anchor point — horizontal tail
+        const labelX = item.isRight
+          ? elbowX + connectorLen
+          : elbowX - connectorLen;
+
+        const anchor = item.isRight ? "start" : "end";
+
+        return (
+          <g key={item.category}>
+            {/* Connector line */}
+            <polyline
+              points={`${edgeX},${edgeY} ${elbowX},${elbowY} ${labelX},${elbowY}`}
+              fill="none"
+              stroke={item.fill}
+              strokeWidth={1}
+              strokeOpacity={0.5}
+            />
+            {/* Colored dot */}
+            <circle cx={labelX} cy={elbowY - 4} r={4} fill={item.fill} />
+            {/* Category name */}
+            <text
+              x={item.isRight ? labelX + 10 : labelX - 10}
+              y={elbowY}
+              textAnchor={anchor}
+              dominantBaseline="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              {item.category}
+            </text>
+            {/* Amount + percentage */}
+            <text
+              x={item.isRight ? labelX + 10 : labelX - 10}
+              y={elbowY + 15}
+              textAnchor={anchor}
+              dominantBaseline="middle"
+              className="fill-muted-foreground text-[10px]"
+            >
+              {formatCurrency(item.amount)} ({item.percentage}%)
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
@@ -245,7 +343,6 @@ export default function SpendingBreakdown({
                   outerRadius="58%"
                   strokeWidth={2}
                   stroke="var(--background)"
-                  label={renderOuterLabel}
                   labelLine={false}
                 >
                   {chartData.map((entry) => (
@@ -269,6 +366,7 @@ export default function SpendingBreakdown({
                     }}
                   />
                 </Pie>
+                <Customized component={LabelsWithConnectors} />
               </PieChart>
             </ChartContainer>
 
