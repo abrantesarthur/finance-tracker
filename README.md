@@ -38,10 +38,11 @@ The API runs at `http://localhost:3000` and the UI at `http://localhost:5173`.
 **Transaction filters** (query params on `GET /transactions`): date range, category, type (`subscription` | `discretionary`).
 
 ## Roadmap
-- Display a cashflow graph with net spend in the last day, week, month, quarter and year. Get inspiration from Robinhood.
+- Add a "Budget" tab and set a budget per category.
 - Figure out how to save the state .db file safely. Add instructions to readme about how to retrieve it.
-- Decide on a design style (colors, fonts, etc). Get inpiration from Robinhood and pinterest pages.
 - Support a net worth section including my investments.
-- Display runway based on my spend and net worth
+- Add Runway tab based on my spend and net worth.
 - Pull card transactions automatically from my bank accounts and reconcile them into the sqlite db file.
 - Think of other cool analytics I can run on all this data, especially using AI.
+- Reorganize the tabs to be more like https://www.monarch.com/. 
+- Select a currency option so we can choose USD or BRL!
